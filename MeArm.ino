@@ -1,3 +1,7 @@
+//TODO: test angleA and angleB equations for accuracy
+//TODO: implement turret rotation and claw movement
+//TODO: create limits on servo movement ranges
+//TODO: create a goal and implement a controller
 #include <Servo.h>;
 
 int turretServoPin = 9;
