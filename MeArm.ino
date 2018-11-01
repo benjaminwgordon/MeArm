@@ -83,6 +83,19 @@ int polarToServoAngleB(double r, double h){
   return B;
 }
 
+void cartesianInterpolate(float startX, float endX, float startY, float endY, float startZ, float endZ, float interpolationSteps){
+  float progress;
+  float currentX = startX;
+  float currentY = startY;
+  float currentZ = startZ;
+  for(int i = 0; i <= interpolationSteps; i++){
+    float currentX += (endX - startX) / interpolationSteps;
+    float currentY += (endY - startY) / interpolationSteps;
+    float currentZ += (endZ - startZ) / interpolationSteps;
+    cartesianMoveTo(currentX, currentY, currentZ);
+  }
+}
+
 void cartesianMoveTo(float x, float y, float z){
   turret.write(cartesianToPolarTheta(x, y));
   leftArm.write(polarToServoAngleB(cartesianToPolarR(x, y), z));
