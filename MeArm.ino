@@ -57,12 +57,12 @@ void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps, float r,
   for (int i = 0; i < n; i++){
     if (polygonXcoords[i] > MAXX || polygonXcoords[i] < MINX){
       String errorMessage = "X coordinate at index " + (String) i + " out of range: (X = " + (String) polygonXcoords[i] + ", but X range is [" + (String) MINX + "," + (String) MAXX + "]";
-      Serial.print(errorMessage);
+      Serial.println(errorMessage);
       validCoords = false;
     }
     if (polygonYcoords[i] > MAXY || polygonYcoords[i] < MINY){
       String errorMessage = "Y coordinate at index " + (String) i + " out of range: (Y = " + (String) polygonYcoords[i] + ", but Y range is [" + (String) MINY + "," + (String) MAXY + "]";
-      Serial.print(errorMessage);
+      Serial.println(errorMessage);
       validCoords = false;
     }
   }
