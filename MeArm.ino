@@ -1,7 +1,16 @@
-//TODO: test angleA and angleB equations for accuracy
-//TODO: implement turret rotation and claw movement
-//TODO: create limits on servo movement ranges
-//TODO: create a goal and implement a controller
+//TODO: test angleA and angleB equations for accuracy -- AARON
+//TOOD: implement adjustment factors for arm angle calculations -- AARON
+//TODO: implement turret rotation and claw movement -- BEN
+
+
+//DONE: implement cartesian coordinate movement -- BEN
+//Done: implement an interpolation function to draw smooth lines -- BEN
+//DONE: create n sided polygon drawing algorithm -- BEN
+//DONE: create limits on servo movement ranges -- BEN
+//DONE: create a main loop controller -- BEN
+//DONE: implement algorithm for calculating servo angles -- AARON
+
+
 #include <Servo.h>
 
 float MINX = -50;
