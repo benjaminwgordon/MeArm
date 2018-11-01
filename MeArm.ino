@@ -1,6 +1,6 @@
 //TODO: test angleA and angleB equations for accuracy -- AARON
 //TOOD: implement adjustment factors for arm angle calculations -- AARON
-//TODO: implement turret rotation and claw movement -- BEN
+
 
 
 //DONE: implement cartesian coordinate movement -- BEN
@@ -9,6 +9,7 @@
 //DONE: create limits on servo movement ranges -- BEN
 //DONE: create a main loop controller -- BEN
 //DONE: implement algorithm for calculating servo angles -- AARON
+//DONE: implement method for claw to accept and release pen -- BEN
 
 
 #include <Servo.h>
@@ -32,6 +33,7 @@ float l;
 int iterator;
 float drawHeight = 0.0;
 int interpolationSteps = 20;
+float penSize = 10;
 
 void setup() {
   // put your setup code here, to run once:
@@ -45,9 +47,21 @@ void setup() {
 }
 
 void loop() {
+  if (iterator == 0)
+  {
+    //move to edge of table and wait to accept pen
+    turret.write(180);
+    clawOpenAndShut(penSize);
+  }
   if (iterator < 5){
     drawNSidedPolygon(iterator + 3, drawHeight, interpolationSteps, iterator * 5, MINX + (iterator * 15), (MAXY - MINY) / 2.0);
     iterator++;
+  }
+
+  if (iterator == 6){
+    //rapid move to edge of table and release pen
+    turret.write(180);
+    clawOpenAndShut(penSize);
   }
 }
 
@@ -78,12 +92,21 @@ void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps, float r,
   
   //draw the lines of each side of the polygon, only if coordinates have been verified drawable
   if (validCoords){
+    //move pen to above the starting position
+    cartesianMoveTo(polygonYcoords[0], polygonXcoords[0], drawHeight + 20);
+    //move pen down to table
+    cartesianMoveto(polygonYcoords[0], polygonXcoords[0], drawHeight);
+
+    //draw each line
     for (int i = 0; i < n - 1; i++){
       cartesianInterpolate(polygonXcoords[i], polygonXcoords[i+1], polygonYcoords[i], polygonYcoords[i+1], drawHeight, drawHeight, interpolationSteps);
     }
     //return to starting pos
     cartesianInterpolate(polygonXcoords[n - 1], polygonXcoords[0], polygonYcoords[0], polygonYcoords[n-1], drawHeight, drawHeight, interpolationSteps);
   }
+  
+  //lift pen
+  cartesianMoveTo(polygonYcoords[0], polygonXcoords[0], drawHeight + 20);
 }
 
 //calculates the angle value for the right arm based on radius and height
@@ -117,6 +140,24 @@ void cartesianInterpolate(float startX, float endX, float startY, float endY, fl
     cartesianMoveTo(currentX, currentY, currentZ);
     delay(15);
   }
+}
+
+
+//opens and shuts the claw jaws for a user to place a pen inside
+void clawOpenAndShut(float penSize){
+  delay(2000);
+  //open claw from shut angle to fully open to accept pen
+  for (int i = penSize; i < clawOpenAngle; i++){
+    claw.write(i);
+  }
+  //wait for pen to be placed inside jaws
+  delay(5000);
+  //clamp down around pen
+  for (int i = clawOpenAngle; i > penSize; i--){
+    claw.write(i);
+  }
+  //wait for user to move hand away
+  delay(2000);
 }
 
 //moves the arm to a position specified in cartesian coordinates
