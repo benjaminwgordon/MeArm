@@ -37,7 +37,7 @@ void setup() {
 
 void loop() {
   if (iterator < 5){
-    drawNSidedPolygon(iterator + 3, drawHeight, interpolationSteps, iterator * 5);
+    drawNSidedPolygon(iterator + 3, drawHeight, interpolationSteps, iterator * 5, MINX + (iterator * 15), (MAXY - MINY) / 2.0);
     iterator++;
   }
 }
@@ -48,8 +48,8 @@ void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps, float r,
   int polygonYcoords[n];
   //calculate all x and y coords for regular polygon of radius 1, n sides, centered at (0,0)
   for (int i = 0; i < n; i++){
-    polygonXcoords[i] = (sin((float) i / n * 2 * 3.1415926535) * r) + x;
-    polygonYcoords[i] = (cos((float) i / n * 2 * 3.1415926535) * r) + y;
+    polygonXcoords[i] = (sin((float) i / n * 2.0 * 3.1415926535) * r) + x;
+    polygonYcoords[i] = (cos((float) i / n * 2.0 * 3.1415926535) * r) + y;
   }
 
   //check for coordinates outside the drawing area
@@ -82,7 +82,7 @@ int setRight(float rad, float hi) //A, determines rad? or
 {
   float angle;
   int d = hi*hi + rad * rad;
-  angle =    180- ((acos((d/(2.0*l*l))-1)+2*atan(hi/rad))/2)*(180/3.1415);
+  angle =    180- ((acos((d/(2.0*l*l))-1)+2*atan(hi/rad))/2.0)*(180/3.1415);
   return (int)angle;
 }
 
@@ -91,7 +91,7 @@ int setLeft(float rad, float hi) //B, determines h? or
 {
   float angle;
   int d = hi * hi + rad * rad;
-  angle =  (((acos((d/(2.0*l*l))-1) - 2 * atan(hi/rad)))/2)*(180/3.1415);
+  angle =  (((acos((d/(2.0*l*l))-1) - 2 * atan(hi/rad)))/2.0)*(180/3.1415);
   return (int)angle;
 }
 
@@ -106,7 +106,7 @@ void cartesianInterpolate(float startX, float endX, float startY, float endY, fl
     currentY += (endY - startY) / interpolationSteps;
     currentZ += (endZ - startZ) / interpolationSteps;
     cartesianMoveTo(currentX, currentY, currentZ);
-    wait(15);
+    delay(15);
   }
 }
 
