@@ -4,6 +4,11 @@
 //TODO: create a goal and implement a controller
 #include <Servo.h>
 
+float MINX = -50;
+float MAXX = 50;
+float MINY = 40;
+float MAXY = 100;
+
 int turretServoPin = 9;
 int leftArmServoPin = 8;
 int rightArmServoPin = 11;
@@ -14,18 +19,18 @@ Servo leftArm;
 Servo rightArm;
 Servo claw;
 
-double polarR;
-double polarH;
-double polarL;
+float polarR;
+float polarH;
+float polarL;
 
 int angleA;
 int angleB;
 int angleC;
 int angleD;
 
-double cartX;
-double CartY;
-double CartZ;
+float cartX;
+float CartY;
+float CartZ;
 
 void setup() {
   // put your setup code here, to run once:
@@ -48,48 +53,22 @@ void loop() {
   
 }
 
-void moveArm(int angleA, int angleB){
-  rightArm.write(angleA);
-  leftArm.write(angleB);
-  //turret.write(angleC);
-  //claw.write(angleD);
-}
-
-int polarToServoAngleA(double r, double h){
-  double lengthArm = 80;
-  double dSquared = (r*r)+(h*h);
-  String dSquaredString = "dSquared = " + (String) dSquared;
-  Serial.print(dSquaredString);
-
-  double firstTermInternal = dSquared / (2 * lengthArm * lengthArm);
-  double firstTerm = acos(firstTermInternal);
-  double secondTermInternal = h / r;
-  double secondTerm = atan(secondTermInternal);
-  String debug = "First term internal = " + (String) firstTermInternal + "   Acos first term = " + (String) firstTerm + "  Second Term Internal = " + (String) secondTermInternal + "  acos second term = " + (String) secondTerm;
-  Serial.print(debug);
-  
-  int A = firstTerm + secondTerm;  
-  return A;
-}
-int polarToServoAngleB(double r, double h){
-  double dSquared = (r*r)+(h*h);
-  double lengthArm = 80;
-  double firstTermInternal = dSquared / (2 * lengthArm * lengthArm);
-  double firstTerm = acos(firstTermInternal);
-  double secondTermInternal = h / r;
-  double secondTerm = atan(secondTermInternal);
-  
-  int B = firstTerm - secondTerm;  
-  return B;
-}
-
-void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps){
+//draws an regular polygon centered on (x,y) with n sides, and radius r
+void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps, float r, float x, float y){
   int polygonXcoords[n];
   int polygonYcoords[n];
   //calculate all x and y coords for regular polygon of radius 1, n sides, centered at (0,0)
   for (int i = 0; i < n; i++){
-    polygonXcoords[i] = sin((float) i / n * 2 * 3.1415926535);
-    polygonYcorrds[i] = cos((float) i / n * 2 * 3.1415926535);
+    polygonXcoords[i] = (sin((float) i / n * 2 * 3.1415926535) * r) + x;
+    polygonYcoords[i] = (cos((float) i / n * 2 * 3.1415926535) * r) + y;
+  }
+
+  //check for coordinates outside the drawing area
+  for (int i = 0; i < n; i++){
+    if (polygonXcoords[i] > MAXX || polygonXcoords[i] < MINX){
+      String errorMessage = "X coordinate at index " + i + " out of range: (X = " + polygonXcoords[i];
+      Serial.print()
+    }
   }
   //draw the lines of each side of the polygon
   for (int i = 0; i < n - 1; i++){
@@ -99,6 +78,25 @@ void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps){
   cartesianInterpolate(polygonXcoords[n - 1], polygonXcoords[0], polygonYcoords[0], polygonYcoords[n-1], drawHeight, drawHeight, interpolationSteps);
 }
 
+//calculates the angle value for the right arm based on radius and height
+int setRight(float rad, float hi) //A, determines rad? or 
+{
+  float angle;
+  int d = hi*hi + rad * rad;
+  angle =    180- ((acos((d/(2.0*l*l))-1)+2*atan(hi/rad))/2)*(180/3.1415);
+  return (int)angle;
+}
+
+//calculates the angle for the left arm based on radius and height
+int setLeft(float rad, float hi) //B, determines h? or 
+{
+  float angle;
+  int d = hi * hi + rad * rad;
+  angle =  (((acos((d/(2.0*l*l))-1) - 2 * atan(hi/rad)))/2)*(180/3.1415);
+  return (int)angle;
+}
+
+//interpolates between two points defined in cartesian coordinates to create a smooth line in between
 void cartesianInterpolate(float startX, float endX, float startY, float endY, float startZ, float endZ, float interpolationSteps){
   float progress;
   float currentX = startX;
@@ -112,16 +110,20 @@ void cartesianInterpolate(float startX, float endX, float startY, float endY, fl
   }
 }
 
+//moves the arm to a position specified in cartesian coordinates
 void cartesianMoveTo(float x, float y, float z){
   turret.write(cartesianToPolarTheta(x, y));
-  leftArm.write(polarToServoAngleB(cartesianToPolarR(x, y), z));
+  leftArm.write(setLeft(cartesianToPolarR(x, y), z));
+  rightArm.write(setRight(cartesianToPolarR(x,y), z));
 }
 
+//calculates the position of the R value in polar coordinates based on cartesian coordinates
 float cartesianToPolarR(float x, float y){
   float R = sqrt(x*x + y*y);
   return R;
 }
 
+//calculates the rotation of the turret based on cartesian coordinates
 float cartesianToPolarTheta(float x, float y){
   return atan(y/x);
 }
