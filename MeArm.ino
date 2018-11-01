@@ -29,16 +29,16 @@ int iterator;  //main iterator for loop
 
 
 //GLOBAL SETTINGS
-float l; //length of main arm
+float l = 90; //length of main arm
 float drawHeight = 0.0; //height to draw at
 int interpolationSteps = 20;  //number of subdivisions for any line
-float penSize = 10; //angle required to hold pen
+float penSize = 80; //angle required to hold pen
 float clawOpenAngle = penSize + 30; //angle claw opens to to accept pen
 
 float MINX = -50; //millimeters left of turret rotation center that canvas extends
 float MAXX = 50; //millimeters right of turret rotation center that canvas extends
-float MINY = 40; //millimeters forwards from turret center that canvas begins
-float MAXY = 100; //millimeters forwards from turret center that canvas ends
+float MINY = 80; //millimeters forwards from turret center that canvas begins
+float MAXY = 160; //millimeters forwards from turret center that canvas ends
 
 
 void setup() {
@@ -47,9 +47,8 @@ void setup() {
   leftArm.attach(leftArmServoPin);
   rightArm.attach(rightArmServoPin);
   claw.attach(clawServoPin);
-  l = 80;
   Serial.begin(9600);
-  iterator = 0;
+  iterator = 1;
 }
 
 void loop() {
@@ -58,18 +57,16 @@ void loop() {
     //move to edge of table and wait to accept pen
     turret.write(180);
     clawOpenAndShut(penSize, clawOpenAngle);
+    iterator++;
   }
 
   //draws 5 shapes of increasing size and number of sides in a straight line left to right
   if (iterator < 5){
-    drawNSidedPolygon(iterator + 3, drawHeight, interpolationSteps, iterator * 5, MINX + (iterator * 15), (MAXY - MINY) / 2.0);
+    drawNSidedPolygon(iterator + 3, drawHeight, interpolationSteps, iterator * 5, MINX + (iterator * 15), (MAXY - MINY) / 2.0 + MINY);
     iterator++;
   }
-
   if (iterator == 6){
-    //rapid move to edge of table and release pen
-    turret.write(180);
-    clawOpenAndShut(penSize, clawOpenAngle);
+    //rapid move to edge of table and release pen 
   }
 }
 
@@ -101,13 +98,15 @@ void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps, float r,
   //draw the lines of each side of the polygon, only if coordinates have been verified drawable
   if (validCoords){
     //move pen to above the starting position
-    cartesianMoveTo(polygonYcoords[0], polygonXcoords[0], drawHeight + 20);
+    cartesianMoveTo(polygonXcoords[0], polygonYcoords[0], drawHeight + 20);
     //move pen down to table
-    cartesianMoveTo(polygonYcoords[0], polygonXcoords[0], drawHeight);
+    cartesianMoveTo(polygonXcoords[0],polygonYcoords[0], drawHeight);
 
     //draw each line
     for (int i = 0; i < n - 1; i++){
       cartesianInterpolate(polygonXcoords[i], polygonXcoords[i+1], polygonYcoords[i], polygonYcoords[i+1], drawHeight, drawHeight, interpolationSteps);
+      Serial.println("attempting to move to (" + (String) polygonXcoords[i] + ", " + (String) polygonYcoords[i] + ", " + (String) (drawHeight + 20) + ")");
+
     }
     //return to starting pos
     cartesianInterpolate(polygonXcoords[n - 1], polygonXcoords[0], polygonYcoords[0], polygonYcoords[n-1], drawHeight, drawHeight, interpolationSteps);
@@ -121,8 +120,10 @@ void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps, float r,
 int setRight(float rad, float hi) //A, determines rad? or 
 {
   float angle;
-  int d = hi*hi + rad * rad;
-  angle =    180- ((acos((d/(2.0*l*l))-1)+2*atan(hi/rad))/2.0)*(180/3.1415);
+  float d = hi*hi + rad * rad;
+  angle =    180 + 50 - ((acos((d/(2.0*l*l))-1)+2*atan(hi/rad))/2.0)*(180/3.1415);
+    Serial.println("Angle on right arm set to " + (String) (angle - 40));
+
   return (int)angle;
 }
 
@@ -130,9 +131,12 @@ int setRight(float rad, float hi) //A, determines rad? or
 int setLeft(float rad, float hi) //B, determines h? or 
 {
   float angle;
-  int d = hi * hi + rad * rad;
-  angle =  (((acos((d/(2.0*l*l))-1) - 2 * atan(hi/rad)))/2.0)*(180/3.1415);
+  float d = hi*hi + rad * rad;
+  
+  angle = 45 - ((acos((d/(2.0*l*l))-1)-2*atan(hi/rad))/2.0)*(180/3.1415);
+  Serial.println("Angle on left arm set to " + (String) (angle));
   return (int)angle;
+  
 }
 
 //interpolates between two points defined in cartesian coordinates to create a smooth line in between
@@ -170,7 +174,7 @@ void clawOpenAndShut(float penSize, float clawOpenAngle){
 
 //moves the arm to a position specified in cartesian coordinates
 void cartesianMoveTo(float x, float y, float z){
-  turret.write(cartesianToPolarTheta(x, y));
+  turret.write(90 + cartesianToPolarTheta(x, y));
   leftArm.write(setLeft(cartesianToPolarR(x, y), z));
   rightArm.write(setRight(cartesianToPolarR(x,y), z));
 }
@@ -183,5 +187,5 @@ float cartesianToPolarR(float x, float y){
 
 //calculates the rotation of the turret based on cartesian coordinates
 float cartesianToPolarTheta(float x, float y){
-  return atan(y/x);
+  return atan(y/x) * 180/3.1415926535;
 }
