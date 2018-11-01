@@ -14,11 +14,6 @@
 
 #include <Servo.h>
 
-float MINX = -50;
-float MAXX = 50;
-float MINY = 40;
-float MAXY = 100;
-
 int turretServoPin = 9;
 int leftArmServoPin = 8;
 int rightArmServoPin = 11;
@@ -29,12 +24,22 @@ Servo leftArm;
 Servo rightArm;
 Servo claw;
 
-float l;
-int iterator;
-float drawHeight = 0.0;
-int interpolationSteps = 20;
-float penSize = 10;
-float clawOpenAngle = penSize + 30;
+int iterator;  //main iterator for loop
+
+
+
+//GLOBAL SETTINGS
+float l; //length of main arm
+float drawHeight = 0.0; //height to draw at
+int interpolationSteps = 20;  //number of subdivisions for any line
+float penSize = 10; //angle required to hold pen
+float clawOpenAngle = penSize + 30; //angle claw opens to to accept pen
+
+float MINX = -50; //millimeters left of turret rotation center that canvas extends
+float MAXX = 50; //millimeters right of turret rotation center that canvas extends
+float MINY = 40; //millimeters forwards from turret center that canvas begins
+float MAXY = 100; //millimeters forwards from turret center that canvas ends
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -55,7 +60,7 @@ void loop() {
     clawOpenAndShut(penSize, clawOpenAngle);
   }
 
-  //draws shapes of increasing size and number of sides in a straight line left to right
+  //draws 5 shapes of increasing size and number of sides in a straight line left to right
   if (iterator < 5){
     drawNSidedPolygon(iterator + 3, drawHeight, interpolationSteps, iterator * 5, MINX + (iterator * 15), (MAXY - MINY) / 2.0);
     iterator++;
