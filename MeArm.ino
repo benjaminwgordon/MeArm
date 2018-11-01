@@ -34,6 +34,7 @@ int iterator;
 float drawHeight = 0.0;
 int interpolationSteps = 20;
 float penSize = 10;
+float clawOpenAngle = penSize + 30;
 
 void setup() {
   // put your setup code here, to run once:
@@ -51,7 +52,7 @@ void loop() {
   {
     //move to edge of table and wait to accept pen
     turret.write(180);
-    clawOpenAndShut(penSize);
+    clawOpenAndShut(penSize, clawOpenAngle);
   }
   if (iterator < 5){
     drawNSidedPolygon(iterator + 3, drawHeight, interpolationSteps, iterator * 5, MINX + (iterator * 15), (MAXY - MINY) / 2.0);
@@ -61,7 +62,7 @@ void loop() {
   if (iterator == 6){
     //rapid move to edge of table and release pen
     turret.write(180);
-    clawOpenAndShut(penSize);
+    clawOpenAndShut(penSize, clawOpenAngle);
   }
 }
 
@@ -95,7 +96,7 @@ void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps, float r,
     //move pen to above the starting position
     cartesianMoveTo(polygonYcoords[0], polygonXcoords[0], drawHeight + 20);
     //move pen down to table
-    cartesianMoveto(polygonYcoords[0], polygonXcoords[0], drawHeight);
+    cartesianMoveTo(polygonYcoords[0], polygonXcoords[0], drawHeight);
 
     //draw each line
     for (int i = 0; i < n - 1; i++){
@@ -144,7 +145,7 @@ void cartesianInterpolate(float startX, float endX, float startY, float endY, fl
 
 
 //opens and shuts the claw jaws for a user to place a pen inside
-void clawOpenAndShut(float penSize){
+void clawOpenAndShut(float penSize, float clawOpenAngle){
   delay(2000);
   //open claw from shut angle to fully open to accept pen
   for (int i = penSize; i < clawOpenAngle; i++){
