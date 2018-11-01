@@ -64,18 +64,27 @@ void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps, float r,
   }
 
   //check for coordinates outside the drawing area
+  bool validCoords = true;
   for (int i = 0; i < n; i++){
     if (polygonXcoords[i] > MAXX || polygonXcoords[i] < MINX){
-      String errorMessage = "X coordinate at index " + i + " out of range: (X = " + polygonXcoords[i];
-      Serial.print()
+      String errorMessage = "X coordinate at index " + i + " out of range: (X = " + polygonXcoords[i] + ", but X range is [" + MINX + "," + MAXX + "]";
+      Serial.print(errorMessage);
+      validCoords = false;
+    }
+    if (polygonYcoords[i] > MAXY || polygonYcoords[i] < MINY){
+      String errorMessage = "Y coordinate at index " + i + " out of range: (Y = " + polygonYcoords[i] + ", but Y range is [" + MINY + "," + MAXY + "]";
+      Serial.print(errorMessage);
+      validCoords = false;
     }
   }
-  //draw the lines of each side of the polygon
-  for (int i = 0; i < n - 1; i++){
-    cartesianInterpolate(polygonXcoords[i], polygonXcoords[i+1], polygonYcoords[i], polygonYcoords[i+1], drawHeight, drawHeight, interpolationSteps);
+  //draw the lines of each side of the polygon, only if coordinates have been verified drawable
+  if (validCoords){
+    for (int i = 0; i < n - 1; i++){
+      cartesianInterpolate(polygonXcoords[i], polygonXcoords[i+1], polygonYcoords[i], polygonYcoords[i+1], drawHeight, drawHeight, interpolationSteps);
+    }
+    //return to starting pos
+    cartesianInterpolate(polygonXcoords[n - 1], polygonXcoords[0], polygonYcoords[0], polygonYcoords[n-1], drawHeight, drawHeight, interpolationSteps);
   }
-  //return to starting pos
-  cartesianInterpolate(polygonXcoords[n - 1], polygonXcoords[0], polygonYcoords[0], polygonYcoords[n-1], drawHeight, drawHeight, interpolationSteps);
 }
 
 //calculates the angle value for the right arm based on radius and height
