@@ -19,18 +19,8 @@ Servo leftArm;
 Servo rightArm;
 Servo claw;
 
-float polarR;
-float polarH;
-float polarL;
+float l;
 
-int angleA;
-int angleB;
-int angleC;
-int angleD;
-
-float cartX;
-float CartY;
-float CartZ;
 
 void setup() {
   // put your setup code here, to run once:
@@ -38,18 +28,11 @@ void setup() {
   leftArm.attach(leftArmServoPin);
   rightArm.attach(rightArmServoPin);
   claw.attach(clawServoPin);
-  polarL = 80;
+  l = 80;
   Serial.begin(9600);
 }
 
 void loop() {
-  //tester code
-  polarR = 40;
-  polarH = 40;
- 
-  angleA = polarToServoAngleA(polarR, polarH);
-  angleB = polarToServoAngleB(polarR, polarH);
-  moveArm(angleA, angleB);
   
 }
 
@@ -67,16 +50,17 @@ void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps, float r,
   bool validCoords = true;
   for (int i = 0; i < n; i++){
     if (polygonXcoords[i] > MAXX || polygonXcoords[i] < MINX){
-      String errorMessage = "X coordinate at index " + i + " out of range: (X = " + polygonXcoords[i] + ", but X range is [" + MINX + "," + MAXX + "]";
+      String errorMessage = "X coordinate at index " + (String) i + " out of range: (X = " + (String) polygonXcoords[i] + ", but X range is [" + (String) MINX + "," + (String) MAXX + "]";
       Serial.print(errorMessage);
       validCoords = false;
     }
     if (polygonYcoords[i] > MAXY || polygonYcoords[i] < MINY){
-      String errorMessage = "Y coordinate at index " + i + " out of range: (Y = " + polygonYcoords[i] + ", but Y range is [" + MINY + "," + MAXY + "]";
+      String errorMessage = "Y coordinate at index " + (String) i + " out of range: (Y = " + (String) polygonYcoords[i] + ", but Y range is [" + (String) MINY + "," + (String) MAXY + "]";
       Serial.print(errorMessage);
       validCoords = false;
     }
   }
+  
   //draw the lines of each side of the polygon, only if coordinates have been verified drawable
   if (validCoords){
     for (int i = 0; i < n - 1; i++){
@@ -112,9 +96,9 @@ void cartesianInterpolate(float startX, float endX, float startY, float endY, fl
   float currentY = startY;
   float currentZ = startZ;
   for(int i = 0; i <= interpolationSteps; i++){
-    float currentX += (endX - startX) / interpolationSteps;
-    float currentY += (endY - startY) / interpolationSteps;
-    float currentZ += (endZ - startZ) / interpolationSteps;
+    currentX += (endX - startX) / interpolationSteps;
+    currentY += (endY - startY) / interpolationSteps;
+    currentZ += (endZ - startZ) / interpolationSteps;
     cartesianMoveTo(currentX, currentY, currentZ);
   }
 }
