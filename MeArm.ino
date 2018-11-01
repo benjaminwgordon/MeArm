@@ -54,6 +54,8 @@ void loop() {
     turret.write(180);
     clawOpenAndShut(penSize, clawOpenAngle);
   }
+
+  //draws shapes of increasing size and number of sides in a straight line left to right
   if (iterator < 5){
     drawNSidedPolygon(iterator + 3, drawHeight, interpolationSteps, iterator * 5, MINX + (iterator * 15), (MAXY - MINY) / 2.0);
     iterator++;
