@@ -83,6 +83,22 @@ int polarToServoAngleB(double r, double h){
   return B;
 }
 
+void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps){
+  int polygonXcoords[n];
+  int polygonYcoords[n];
+  //calculate all x and y coords for regular polygon of radius 1, n sides, centered at (0,0)
+  for (int i = 0; i < n; i++){
+    polygonXcoords[i] = sin((float) i / n * 2 * 3.1415926535);
+    polygonYcorrds[i] = cos((float) i / n * 2 * 3.1415926535);
+  }
+  //draw the lines of each side of the polygon
+  for (int i = 0; i < n - 1; i++){
+    cartesianInterpolate(polygonXcoords[i], polygonXcoords[i+1], polygonYcoords[i], polygonYcoords[i+1], drawHeight, drawHeight, interpolationSteps);
+  }
+  //return to starting pos
+  cartesianInterpolate(polygonXcoords[n - 1], polygonXcoords[0], polygonYcoords[0], polygonYcoords[n-1], drawHeight, drawHeight, interpolationSteps);
+}
+
 void cartesianInterpolate(float startX, float endX, float startY, float endY, float startZ, float endZ, float interpolationSteps){
   float progress;
   float currentX = startX;
