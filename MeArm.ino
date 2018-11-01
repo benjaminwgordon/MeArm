@@ -20,7 +20,9 @@ Servo rightArm;
 Servo claw;
 
 float l;
-
+int iterator;
+float drawHeight = 0.0;
+int interpolationSteps = 20;
 
 void setup() {
   // put your setup code here, to run once:
@@ -30,10 +32,14 @@ void setup() {
   claw.attach(clawServoPin);
   l = 80;
   Serial.begin(9600);
+  iterator = 0;
 }
 
 void loop() {
-  
+  if (iterator < 5){
+    drawNSidedPolygon(iterator + 3, drawHeight, interpolationSteps, iterator * 5);
+    iterator++;
+  }
 }
 
 //draws an regular polygon centered on (x,y) with n sides, and radius r
@@ -100,6 +106,7 @@ void cartesianInterpolate(float startX, float endX, float startY, float endY, fl
     currentY += (endY - startY) / interpolationSteps;
     currentZ += (endZ - startZ) / interpolationSteps;
     cartesianMoveTo(currentX, currentY, currentZ);
+    wait(15);
   }
 }
 
