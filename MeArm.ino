@@ -29,7 +29,7 @@ int iterator;  //main iterator for loop
 
 
 //GLOBAL SETTINGS
-float l = 90; //length of main arm
+float l = 80; //length of main arm
 float drawHeight = 0.0; //height to draw at
 int interpolationSteps = 20;  //number of subdivisions for any line
 float penSize = 80; //angle required to hold pen
@@ -37,8 +37,8 @@ float clawOpenAngle = penSize + 30; //angle claw opens to to accept pen
 
 float MINX = -50; //millimeters left of turret rotation center that canvas extends
 float MAXX = 50; //millimeters right of turret rotation center that canvas extends
-float MINY = 80; //millimeters forwards from turret center that canvas begins
-float MAXY = 160; //millimeters forwards from turret center that canvas ends
+float MINY = 30; //millimeters forwards from turret center that canvas begins
+float MAXY = 140; //millimeters forwards from turret center that canvas ends
 
 
 void setup() {
@@ -52,21 +52,16 @@ void setup() {
 }
 
 void loop() {
-  if (iterator == 0)
+  if (iterator == 1)
   {
     //move to edge of table and wait to accept pen
-    turret.write(180);
-    clawOpenAndShut(penSize, clawOpenAngle);
+    turret.write(90);
+    claw.write(90);
+    delay(1000);
+    claw.write(130);
+    delay(1000);
+    drawNSidedPolygon(4, 0.0, 3, 10, 0, 80);
     iterator++;
-  }
-
-  //draws 5 shapes of increasing size and number of sides in a straight line left to right
-  if (iterator < 5){
-    drawNSidedPolygon(iterator + 3, drawHeight, interpolationSteps, iterator * 5, MINX + (iterator * 15), (MAXY - MINY) / 2.0 + MINY);
-    iterator++;
-  }
-  if (iterator == 6){
-    //rapid move to edge of table and release pen 
   }
 }
 
@@ -83,6 +78,7 @@ void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps, float r,
   //check for coordinates outside the drawing area
   bool validCoords = true;
   for (int i = 0; i < n; i++){
+    Serial.println("Point +" + (String)i + ": (" + (String)polygonXcoords[i] + ", " + (String)polygonYcoords[i] + ")");
     if (polygonXcoords[i] > MAXX || polygonXcoords[i] < MINX){
       String errorMessage = "X coordinate at index " + (String) i + " out of range: (X = " + (String) polygonXcoords[i] + ", but X range is [" + (String) MINX + "," + (String) MAXX + "]";
       Serial.println(errorMessage);
@@ -99,17 +95,13 @@ void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps, float r,
   if (validCoords){
     //move pen to above the starting position
     cartesianMoveTo(polygonXcoords[0], polygonYcoords[0], drawHeight + 20);
-    //move pen down to table
-    cartesianMoveTo(polygonXcoords[0],polygonYcoords[0], drawHeight);
 
     //draw each line
     for (int i = 0; i < n - 1; i++){
-      cartesianInterpolate(polygonXcoords[i], polygonXcoords[i+1], polygonYcoords[i], polygonYcoords[i+1], drawHeight, drawHeight, interpolationSteps);
-      Serial.println("attempting to move to (" + (String) polygonXcoords[i] + ", " + (String) polygonYcoords[i] + ", " + (String) (drawHeight + 20) + ")");
-
+      cartesianInterpolate(polygonXcoords[i], polygonXcoords[i+1],polygonYcoords[i], polygonYcoords[i+1], interpolationSteps);
     }
     //return to starting pos
-    cartesianInterpolate(polygonXcoords[n - 1], polygonXcoords[0], polygonYcoords[0], polygonYcoords[n-1], drawHeight, drawHeight, interpolationSteps);
+    cartesianInterpolate(polygonXcoords[n - 1], polygonXcoords[0], polygonYcoords[0], polygonYcoords[n-1], interpolationSteps);
   }
   
   //lift pen
@@ -119,64 +111,87 @@ void drawNSidedPolygon(int n, float drawHeight, int interpolationSteps, float r,
 //calculates the angle value for the right arm based on radius and height
 int setRight(float rad, float hi) //A, determines rad? or 
 {
-  float angle;
   float d = hi*hi + rad * rad;
-  angle =    180 + 50 - ((acos((d/(2.0*l*l))-1)+2*atan(hi/rad))/2.0)*(180/3.1415);
-    Serial.println("Angle on right arm set to " + (String) (angle - 40));
-
-  return (int)angle;
+  float acosInternal  = d / 12800.0 - 1;
+  float Acos = acos(acosInternal);
+  float atanInternal = hi / rad;
+  float Atan = atan(atanInternal);
+  float angleRad = (0.5 * Acos) - Atan;
+  float angle = angleRad * 180 / 3.1415926535;
+  float adjustedAngle = 135 - angle;
+//  Serial.println("d=" + (String)d);
+//  Serial.println("acosInteral=" + (String)acosInternal);
+//  Serial.println("Acos=" + (String)Acos);
+//  Serial.println("atanInternal=" + (String)atanInternal);
+//  Serial.println("Atan=" + (String)Atan);
+//  Serial.println("angle in Rad=" + (String)angleRad);
+//  Serial.println("angle in deg=" + (String)angle);  
+//  Serial.println("setting right arm to expected real location: " + (String)angle);  
+//  Serial.println("setting right arm to servo actual location: " + (String)adjustedAngle); 
+  return (int)adjustedAngle;
 }
 
 //calculates the angle for the left arm based on radius and height
 int setLeft(float rad, float hi) //B, determines h? or 
 {
-  float angle;
   float d = hi*hi + rad * rad;
-  
-  angle = 45 - ((acos((d/(2.0*l*l))-1)-2*atan(hi/rad))/2.0)*(180/3.1415);
-  Serial.println("Angle on left arm set to " + (String) (angle));
-  return (int)angle;
-  
+  float acosInternal  = d / 12800.0 - 1;
+  float Acos = acos(acosInternal);
+  float atanInternal = hi / rad;
+  float Atan = atan(atanInternal);
+  float angleRad = (0.5 * Acos) + Atan;
+  float angle = angleRad * 180 / 3.1415926535;
+  float adjustedAngle = 180 - 53 - angle;
+//  Serial.println("d=" + (String)d);
+//  Serial.println("acosInteral=" + (String)acosInternal);
+//  Serial.println("Acos=" + (String)Acos);
+//  Serial.println("atanInternal=" + (String)atanInternal);
+//  Serial.println("Atan=" + (String)Atan);
+//  Serial.println("angle in Rad=" + (String)angleRad);
+//  Serial.println("angle in deg=" + (String)angle);  
+//  Serial.println("setting left arm to expected real location: " + (String)angle);  
+//  Serial.println("setting left arm to servo actual location: " + (String)adjustedAngle);  
+  return adjustedAngle;
 }
 
 //interpolates between two points defined in cartesian coordinates to create a smooth line in between
-void cartesianInterpolate(float startX, float endX, float startY, float endY, float startZ, float endZ, float interpolationSteps){
+void cartesianInterpolate(float startX, float endX, float startY, float endY, float interpolationSteps){
   float progress;
   float currentX = startX;
   float currentY = startY;
-  float currentZ = startZ;
-  for(int i = 0; i <= interpolationSteps; i++){
-    currentX += (endX - startX) / interpolationSteps;
-    currentY += (endY - startY) / interpolationSteps;
-    currentZ += (endZ - startZ) / interpolationSteps;
-    cartesianMoveTo(currentX, currentY, currentZ);
-    delay(15);
+  float stepX = (endX - startX) / interpolationSteps;
+  float stepY = (endY - startY) / interpolationSteps;
+  for(int i = 0; i < interpolationSteps; i++){
+    currentX += stepX;
+    currentY += stepY;
+    Serial.println("[" + (String) currentX + ", " + (String) currentY + "]");
+    cartesianMoveTo(currentX, currentY, drawHeight + 20);
+    int wait = 0;
+    while (wait < 10000){
+      wait++;
+    }
+    wait = 0;
+    cartesianMoveTo(currentX, currentY, drawHeight);
+    while (wait < 10000){
+      wait++;
+    }
+    cartesianMoveTo(currentX, currentY, drawHeight + 20);
+    wait = 0;
+    while (wait < 10000){
+      wait++;
+    }
   }
-}
-
-
-//opens and shuts the claw jaws for a user to place a pen inside
-void clawOpenAndShut(float penSize, float clawOpenAngle){
-  delay(2000);
-  //open claw from shut angle to fully open to accept pen
-  for (int i = penSize; i < clawOpenAngle; i++){
-    claw.write(i);
-  }
-  //wait for pen to be placed inside jaws
-  delay(5000);
-  //clamp down around pen
-  for (int i = clawOpenAngle; i > penSize; i--){
-    claw.write(i);
-  }
-  //wait for user to move hand away
-  delay(2000);
 }
 
 //moves the arm to a position specified in cartesian coordinates
 void cartesianMoveTo(float x, float y, float z){
-  turret.write(90 + cartesianToPolarTheta(x, y));
-  leftArm.write(setLeft(cartesianToPolarR(x, y), z));
-  rightArm.write(setRight(cartesianToPolarR(x,y), z));
+  float Theta = cartesianToPolarTheta(x, y);
+  float R = cartesianToPolarR(x, y);
+  turret.write(Theta);
+  leftArm.write(setLeft(R, z));
+  rightArm.write(setRight(R, z));
+  Serial.println("turret: " + (String)Theta);
+  delay(1000);
 }
 
 //calculates the position of the R value in polar coordinates based on cartesian coordinates
@@ -187,5 +202,11 @@ float cartesianToPolarR(float x, float y){
 
 //calculates the rotation of the turret based on cartesian coordinates
 float cartesianToPolarTheta(float x, float y){
-  return atan(y/x) * 180/3.1415926535;
+  float Theta =  atan(y/x) * 180/3.1415926535;
+  //Serial.println("Atan degrees = " + (String)Theta);
+  int complementTheta = (int)((180.0 - Theta) * 10000);
+  //Serial.println("complement of theta * 10000 = " + (String)complementTheta);
+  float modTheta = 90 + (complementTheta % 1800000) / 10000.0;
+  //Serial.println("final angle for turret = " + (String)modTheta);
+  return modTheta;
 }
